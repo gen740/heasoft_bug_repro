@@ -51,7 +51,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 RUN groupadd heasoft && useradd -r -m -g heasoft heasoft \
- && mkdir -p /opt/heasoft/caldb \
+ && mkdir -p /opt/heasoft \
  && chown -R heasoft:heasoft /opt/heasoft
 
 # Use the local tarball (the original Dockerfile downloads it with wget)
@@ -110,33 +110,15 @@ RUN /bin/echo >> /home/heasoft/.bashrc \
  && /bin/echo '# Initialize HEASoft environment' >> /home/heasoft/.bashrc \
  && /bin/echo 'export HEADAS=/opt/heasoft' >> /home/heasoft/.bashrc \
  && /bin/echo '. $HEADAS/headas-init.sh' >> /home/heasoft/.bashrc \
- && /bin/echo >> /home/heasoft/.bashrc \
- && /bin/echo '# Initialize environment for CALDB' >> /home/heasoft/.bashrc \
- && /bin/echo 'export CALDB=https://heasarc.gsfc.nasa.gov/FTP/caldb' >> /home/heasoft/.bashrc \
- && /bin/echo 'export CALDBCONFIG=/opt/heasoft/caldb/caldb.config' >> /home/heasoft/.bashrc \
- && /bin/echo 'export CALDBALIAS=/opt/heasoft/caldb/alias_config.fits' >> /home/heasoft/.bashrc \
  && /bin/echo >> /home/heasoft/.profile \
  && /bin/echo '# Initialize HEASoft environment' >> /home/heasoft/.profile \
  && /bin/echo 'export HEADAS=/opt/heasoft' >> /home/heasoft/.profile \
  && /bin/echo '. $HEADAS/headas-init.sh' >> /home/heasoft/.profile \
- && /bin/echo >> /home/heasoft/.profile \
- && /bin/echo '# Initialize environment for CALDB' >> /home/heasoft/.profile \
- && /bin/echo 'export CALDB=https://heasarc.gsfc.nasa.gov/FTP/caldb' >> /home/heasoft/.profile \
- && /bin/echo 'export CALDBCONFIG=/opt/heasoft/caldb/caldb.config' >> /home/heasoft/.profile \
- && /bin/echo 'export CALDBALIAS=/opt/heasoft/caldb/alias_config.fits' >> /home/heasoft/.profile \
  && /bin/echo '# Initialize HEASoft environment' >> /home/heasoft/.cshrc \
  && /bin/echo 'setenv HEADAS /opt/heasoft' >> /home/heasoft/.cshrc \
- && /bin/echo 'source $HEADAS/headas-init.csh' >> /home/heasoft/.cshrc \
- && /bin/echo >> /home/heasoft/.cshrc \
- && /bin/echo '# Initialize environment for CALDB' >> /home/heasoft/.cshrc \
- && /bin/echo 'setenv CALDB https://heasarc.gsfc.nasa.gov/FTP/caldb' >> /home/heasoft/.cshrc \
- && /bin/echo 'setenv CALDBCONFIG /opt/heasoft/caldb/caldb.config' >> /home/heasoft/.cshrc \
- && /bin/echo 'setenv CALDBALIAS /opt/heasoft/caldb/alias_config.fits' >> /home/heasoft/.cshrc
+ && /bin/echo 'source $HEADAS/headas-init.csh' >> /home/heasoft/.cshrc
 
-RUN mkdir -p /home/heasoft/pfiles \
- && cd /opt/heasoft/caldb \
- && wget https://heasarc.gsfc.nasa.gov/FTP/caldb/software/tools/caldb.config \
- && wget https://heasarc.gsfc.nasa.gov/FTP/caldb/software/tools/alias_config.fits
+RUN mkdir -p /home/heasoft/pfiles
 
 ENV CC=/usr/bin/gcc \
     CXX=/usr/bin/g++ \
@@ -166,10 +148,7 @@ ENV CC=/usr/bin/gcc \
     XRDEFAULTS=/opt/heasoft/xrdefaults \
     TCLRL_LIBDIR=/opt/heasoft/lib \
     XANADU=/opt/heasoft \
-    XANBIN=/opt/heasoft \
-    CALDB=https://heasarc.gsfc.nasa.gov/FTP/caldb \
-    CALDBCONFIG=/opt/heasoft/caldb/caldb.config \
-    CALDBALIAS=/opt/heasoft/caldb/alias_config.fits
+    XANBIN=/opt/heasoft
 
 # Bug reproduction scripts (placed last so they don't bust the build cache)
 USER root

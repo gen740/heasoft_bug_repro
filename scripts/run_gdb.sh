@@ -4,10 +4,6 @@ set -e
 export HEADAS=/opt/heasoft
 . "$HEADAS/headas-init.sh"
 
-# Use a local CALDB file tree (some tools misbehave with a remote URL)
-export CALDB=/opt/heasoft/caldb
-export CALDBCONFIG=/opt/heasoft/caldb/caldb.config
-export CALDBALIAS=/opt/heasoft/caldb/alias_config.fits
 export PFILES="/home/heasoft/pfiles;$HEADAS/syspfiles"
 mkdir -p /home/heasoft/pfiles
 

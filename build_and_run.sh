@@ -46,7 +46,13 @@ run_image() {
     build_image "${1}" "${3}"
     cleanup "${2}"
     echo "=== Reproducing XSPEC bug (generate spectra + GDB backtrace) using ${1} ==="
-    $DOCKER run --rm $RUN_OPTS --name "${2}" "${1}"
+    # Run without --rm so the GDB backtrace can be copied out afterwards.
+    # The run itself may abort (SIGABRT is the point), so don't let that stop us.
+    $DOCKER run $RUN_OPTS --name "${2}" "${1}" || true
+    $DOCKER cp "${2}:/work/bt_clean.txt" "${SCRIPT_DIR}/stack_trace.txt" \
+        && echo "=== GDB stack trace written to ${SCRIPT_DIR}/stack_trace.txt ===" \
+        || echo "warning: could not extract /work/bt_clean.txt from container"
+    cleanup "${2}"
 }
 
 case "${1:-}" in

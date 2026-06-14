@@ -1,0 +1,80 @@
+warning: Error disabling address space randomization: Operation not permitted
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+		XSPEC version: 12.15.1
+	Build Date/Time: Sun Jun 14 11:36:31 2026
+
+[Detaching after vfork from child process 113]
+[Detaching after vfork from child process 115]
+[Detaching after vfork from child process 117]
+XSPEC12>[New Thread 0x762ededb7640 (LWP 119)]
+data 1:1 src1.pha
+
+1 spectrum  in use
+ 
+Spectral Data File: src1.pha  Spectrum 1
+Net count rate (cts/s) for Spectrum:1  4.605e+02 +/- 2.146e-01
+ Assigned to Data Group 1 and Plot Group 1
+  Noticed Channels:  1-100
+  Telescope: DUMMY Instrument: DUMMY  Channel Type: PI
+  Exposure Time: 1e+04 sec
+ Using fit statistic: chi
+ Using Response (RMF) File            dummy1.rmf for Source 1
+ Using Auxiliary Response (ARF) File  dummy1.arf
+
+XSPEC12>data 2:2 src2.pha
+
+2 spectra  in use
+ 
+Spectral Data File: src2.pha  Spectrum 2
+Net count rate (cts/s) for Spectrum:2  4.605e+02 +/- 2.146e-01
+ Assigned to Data Group 2 and Plot Group 2
+  Noticed Channels:  1-100
+  Telescope: DUMMY Instrument: DUMMY  Channel Type: PI
+  Exposure Time: 1e+04 sec
+ Using fit statistic: chi
+ Using Response (RMF) File            dummy2.rmf for Source 1
+ Using Auxiliary Response (ARF) File  dummy2.arf
+
+XSPEC12>model powerlaw
+
+Input parameter value, delta, min, bot, top, and max values for ...
+              1       0.01(      0.01)         -3         -2          9         10
+1:data group 1::powerlaw:PhoIndex>/
+              1       0.01(      0.01)          0          0      1e+20      1e+24
+2:data group 1::powerlaw:norm>/
+
+Thread 1 "xspec" received signal SIGABRT, Aborted.
+__pthread_kill_implementation (no_tid=0, signo=6, threadid=129943679576448) at ./nptl/pthread_kill.c:44
+44	./nptl/pthread_kill.c: No such file or directory.
+
+Thread 2 (Thread 0x762ededb7640 (LWP 119) "xspec"):
+#0  0x0000762ee1a0b6bd in __GI___select (nfds=nfds@entry=4, readfds=readfds@entry=0x762ededb6a50, writefds=writefds@entry=0x762ededb6ad0, exceptfds=exceptfds@entry=0x762ededb6b50, timeout=timeout@entry=0x0) at ../sysdeps/unix/sysv/linux/select.c:69
+#1  0x0000762ee1ebf911 in NotifierThreadProc (dummy=<optimized out>) at /home/heasoft/heasoft-6.36/tcltk/tcl/unix/tclUnixNotfy.c:1250
+#2  0x0000762ee1984ac3 in start_thread (arg=<optimized out>) at ./nptl/pthread_create.c:442
+#3  0x0000762ee1a15a84 in clone () at ../sysdeps/unix/sysv/linux/x86_64/clone.S:100
+
+Thread 1 (Thread 0x762ededca980 (LWP 110) "xspec"):
+#0  __pthread_kill_implementation (no_tid=0, signo=6, threadid=129943679576448) at ./nptl/pthread_kill.c:44
+#1  __pthread_kill_internal (signo=6, threadid=129943679576448) at ./nptl/pthread_kill.c:78
+#2  __GI___pthread_kill (threadid=129943679576448, signo=signo@entry=6) at ./nptl/pthread_kill.c:89
+#3  0x0000762ee1932476 in __GI_raise (sig=sig@entry=6) at ../sysdeps/posix/raise.c:26
+#4  0x0000762ee19187f3 in __GI_abort () at ./stdlib/abort.c:79
+#5  0x0000762ee4361ecf in std::__replacement_assert (__file=0x762ee24eb048 "/usr/include/c++/11/bits/stl_vector.h", __line=1045, __function=0x762ee24ec1e8 "std::vector<_Tp, _Alloc>::reference std::vector<_Tp, _Alloc>::operator[](std::vector<_Tp, _Alloc>::size_type) [with _Tp = ComponentGroup*; _Alloc = std::allocator<ComponentGroup*>; std::vector<_Tp, _A"..., __condition=0x762ee24eaf16 "__n < this->size()") at /usr/include/x86_64-linux-gnu/c++/11/bits/c++config.h:514
+#6  0x0000762ee24510a1 in std::vector<ComponentGroup*, std::allocator<ComponentGroup*> >::operator[] (this=0x635bc663c2c8, __n=0) at /usr/include/c++/11/bits/stl_vector.h:1045
+#7  0x0000762ee244eeb9 in XSModExpTree_Iterator<ComponentGroup*, std::vector<ComponentGroup*, std::allocator<ComponentGroup*> >, ComponentGroup*>::operator* (this=0x7ffef5721930) at /home/heasoft/heasoft-6.36/Xspec/BLD/x86_64-pc-linux-gnu-libc2.35/include/XSUtil/Parse/XSModExpTree.h:173
+#8  0x0000762ee243b1ec in Model::Model (this=0x635bc663bf70, right=...) at Model/Model.cxx:173
+#9  0x0000762ee243e8af in Model::clone (this=0x635bc6655770) at Model/Model.cxx:695
+#10 0x0000762ee2448def in Model::makeDataGroupCopies (this=0x635bc6655770, groups=std::vector of length 1, capacity 1 = {...}) at Model/Model.cxx:2548
+#11 0x0000762ee43e9ee7 in XSGlobal::doModel (rawArgs=std::vector of length 2, capacity 2 = {...}) at Handler/xsModel.cxx:341
+#12 0x0000762ee43e887f in XSGlobal::xsModel (cdata=0x635bc64a80a0, tclInterp=0x635bc643b950, objc=2, objv=0x635bc6449790) at Handler/xsModel.cxx:24
+#13 0x0000762ee1db10b2 in TclNRRunCallbacks (interp=interp@entry=0x635bc643b950, result=0, rootPtr=0x0) at /home/heasoft/heasoft-6.36/tcltk/tcl/generic/tclBasic.c:4493
+#14 0x0000762ee1db1135 in Tcl_EvalObjv (interp=interp@entry=0x635bc643b950, objc=objc@entry=4, objv=objv@entry=0x635bc6449250, flags=flags@entry=2097168) at /home/heasoft/heasoft-6.36/tcltk/tcl/generic/tclBasic.c:4216
+#15 0x0000762ee1db2fd9 in TclEvalEx (interp=interp@entry=0x635bc643b950, script=0x635bc65d0440 "namespace eval tclreadline {\n\n#\n#  Custom prompt\n#\n\n#variable prompt_string [file tail [info nameofexecutable]]\n\nproc prompt1 {} {\n\n#  variable prompt_string\n#  return \"$prompt_string\\[[history nextid"..., numBytes=<optimized out>, flags=flags@entry=0, line=line@entry=1, clNextOuter=clNextOuter@entry=0x0, outerScript=0x635bc65d0440 "namespace eval tclreadline {\n\n#\n#  Custom prompt\n#\n\n#variable prompt_string [file tail [info nameofexecutable]]\n\nproc prompt1 {} {\n\n#  variable prompt_string\n#  return \"$prompt_string\\[[history nextid"...) at /home/heasoft/heasoft-6.36/tcltk/tcl/generic/tclBasic.c:5362
+#16 0x0000762ee1e6d469 in Tcl_FSEvalFileEx (encodingName=<optimized out>, pathPtr=0x635bc6479e20, interp=0x635bc643b950) at /home/heasoft/heasoft-6.36/tcltk/tcl/generic/tclIOUtil.c:1824
+#17 Tcl_FSEvalFileEx (interp=0x635bc643b950, pathPtr=0x635bc6479e20, encodingName=<optimized out>) at /home/heasoft/heasoft-6.36/tcltk/tcl/generic/tclIOUtil.c:1724
+#18 0x0000762ee1e6d5ec in Tcl_EvalFile (interp=interp@entry=0x635bc643b950, fileName=fileName@entry=0x7ffef5722210 "/opt/heasoft/spectral/scripts/xs_tclreadline.tcl") at /home/heasoft/heasoft-6.36/tcltk/tcl/generic/tclIOUtil.c:424
+#19 0x0000762ee1e74cc3 in Tcl_SourceRCFile (interp=0x635bc643b950) at /home/heasoft/heasoft-6.36/tcltk/tcl/generic/tclMain.c:253
+#20 0x0000762ee1e75265 in Tcl_MainEx (argc=<optimized out>, argv=0x7ffef5722600, appInitProc=0x635ba92e9ee5 <Tcl_AppInit>, interp=0x635bc643b950) at /home/heasoft/heasoft-6.36/tcltk/tcl/generic/tclMain.c:431
+#21 0x0000635ba92e9e5f in main ()

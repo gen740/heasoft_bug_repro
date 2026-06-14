@@ -1,0 +1,20 @@
+# HEASoft source tarball (downloaded separately, ~4.5 GB)
+heasoft-*.tar.gz
+heasoft-*src.tar.gz
+
+# Unpacked HEASoft source tree
+heasoft-6.36/
+heasoft-*/
+
+# GDB backtrace / debug output captured from runs
+trace.txt
+bt_clean.txt
+
+# Generated spectra and response files
+*.pha
+*.rmf
+*.arf
+
+# Editor / OS cruft
+*.swp
+.DS_Store

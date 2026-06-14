@@ -1,0 +1,6 @@
+data 1:1 src1.pha
+data 2:2 src2.pha
+model powerlaw
+/
+/
+exit

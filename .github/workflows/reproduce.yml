@@ -1,0 +1,93 @@
+name: Reproduce HEASoft XSPEC bug
+
+# Builds HEASoft 6.36 from source (with -D_GLIBCXX_ASSERTIONS) inside Docker and
+# reproduces the XSPEC SIGABRT under GDB, surfacing the stack trace in the logs.
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  reproduce:
+    runs-on: ubuntu-latest
+    # The HEASoft source build is very slow; give it plenty of headroom.
+    timeout-minutes: 350
+
+    env:
+      HEASOFT_VERSION: "6.36"
+      TARBALL: heasoft-6.36src.tar.gz
+      TARBALL_URL: "https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/lheasoft6.36/heasoft-6.36src.tar.gz"
+      IMAGE: heasoft-debug:6.36
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Free up disk space
+        # The unpacked source tree + build artifacts are large; reclaim space.
+        run: |
+          echo "Disk before cleanup:"; df -h /
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc \
+                      /opt/hostedtoolcache/CodeQL /usr/local/.ghcup \
+                      /usr/local/share/boost "$AGENT_TOOLSDIRECTORY" || true
+          sudo docker image prune -af || true
+          echo "Disk after cleanup:"; df -h /
+
+      - name: Cache HEASoft source tarball
+        id: cache-tarball
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.TARBALL }}
+          key: heasoft-src-${{ env.HEASOFT_VERSION }}
+
+      - name: Download HEASoft source tarball
+        if: steps.cache-tarball.outputs.cache-hit != 'true'
+        run: |
+          echo "Downloading ${TARBALL_URL} ..."
+          wget --progress=dot:giga -O "${TARBALL}" "${TARBALL_URL}"
+          ls -lh "${TARBALL}"
+
+      - name: Build Docker image
+        run: |
+          docker build -t "${IMAGE}" .
+
+      - name: Run bug reproduction (capture GDB backtrace)
+        run: |
+          set -o pipefail
+          # Run without --rm so we can copy the backtrace file out afterwards.
+          docker run --name heasoft-bug "${IMAGE}" | tee run.log
+        # Keep going so we still publish the trace even if XSPEC aborts.
+        continue-on-error: true
+
+      - name: Extract backtrace from container
+        if: always()
+        run: |
+          docker cp heasoft-bug:/work/bt_clean.txt ./bt_clean.txt || \
+            echo "bt_clean.txt not found in container" > bt_clean.txt
+          docker rm -f heasoft-bug || true
+
+      - name: Show GDB stack trace
+        if: always()
+        run: |
+          echo "================ GDB STACK TRACE (bt_clean.txt) ================"
+          cat bt_clean.txt || true
+          echo "==============================================================="
+          {
+            echo "## GDB stack trace";
+            echo '```';
+            # Key frames first, then make the full trace available as an artifact.
+            grep -E "^(#[0-9]|Thread |.*received signal)" bt_clean.txt || true;
+            echo '```';
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload logs and backtrace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: heasoft-bug-trace
+          path: |
+            bt_clean.txt
+            run.log
+          if-no-files-found: warn

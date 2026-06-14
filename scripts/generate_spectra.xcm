@@ -1,0 +1,22 @@
+query yes
+model powerlaw
+/
+/
+
+fakeit none
+dummy1.rmf
+dummy1.arf
+y
+
+src1.pha
+10000,1,1
+
+fakeit none
+dummy2.rmf
+dummy2.arf
+y
+
+src2.pha
+10000,1,1
+
+exit

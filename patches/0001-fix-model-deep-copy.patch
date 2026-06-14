@@ -1,0 +1,24 @@
+diff --git a/Xspec/src/XSModel/Model/Model.cxx b/Xspec/src/XSModel/Model/Model.cxx
+--- a/Xspec/src/XSModel/Model/Model.cxx
++++ b/Xspec/src/XSModel/Model/Model.cxx
+@@ -163,16 +163,15 @@ Model::Model(const Model &right)
+
+   m_compGroupTree = right.m_compGroupTree;
+   // Need DEEP copies of the ComponentGroup*'s.
+-  std::vector<ComponentGroup*>& cGroups = m_compGroupTree.values();
+-  cGroups.clear();
+   ModelExprTree::iterator e = m_expressionTree.postBegin();
+   XSModExpTree<ComponentGroup*>::iterator itC = m_compGroupTree.postBegin();
+   XSModExpTree<ComponentGroup*>::iterator itCEnd = m_compGroupTree.end();
+   while (itC != itCEnd)
+   {
+-    cGroups.push_back((*itC)->clone());
+-     cGroups.back()->parent(this);
+-     cGroups.back()->setComponentInfo(&(*e));
++     ComponentGroup* clonedGroup = (*itC)->clone();
++     *itC = clonedGroup;
++     clonedGroup->parent(this);
++     clonedGroup->setComponentInfo(&(*e));
+      itC.postOrderNext();
+      e.postOrderNext();
+   }

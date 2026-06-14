@@ -45,6 +45,7 @@ RUN apt-get update \
     xorg-dev \
     xvfb \
     gdb \
+    patch \
  && pip install --upgrade pip \
  && apt-get clean \
  && rm -rf /var/lib/apt/lists/*
@@ -63,6 +64,21 @@ WORKDIR /home/heasoft
 RUN echo "Unpacking heasoft-${HEASOFT_VERSION}src.tar.gz..." \
  && tar xzf heasoft-${HEASOFT_VERSION}src.tar.gz \
  && rm -f heasoft-${HEASOFT_VERSION}src.tar.gz
+
+# Optionally apply bugfix patches before configuring.
+# Build the buggy image with the default (APPLY_PATCH=0); build the fixed image
+# with `--build-arg APPLY_PATCH=1`. Kept in its own layer so the two variants
+# share every cached layer above this point.
+ARG APPLY_PATCH=0
+COPY --chown=heasoft:heasoft patches/ /home/heasoft/patches/
+RUN if [ "${APPLY_PATCH}" = "1" ]; then \
+       cd ${HOME}/heasoft-${HEASOFT_VERSION} \
+       && for p in /home/heasoft/patches/*.patch; do \
+            echo "Applying $p..." && patch -p1 < "$p"; \
+          done; \
+    else \
+       echo "APPLY_PATCH=0: building unpatched (buggy) source"; \
+    fi
 
 # configure: -D_GLIBCXX_ASSERTIONS enables STL bounds checking, -g adds debug symbols
 RUN cd ${HOME}/heasoft-${HEASOFT_VERSION}/BUILD_DIR/ \

@@ -1,7 +1,9 @@
 name: Reproduce HEASoft XSPEC bug
 
 # Builds HEASoft 6.36 from source (with -D_GLIBCXX_ASSERTIONS) inside Docker and
-# reproduces the XSPEC SIGABRT under GDB, surfacing the stack trace in the logs.
+# runs two variants:
+#   * reproduce — unpatched source; reproduces the XSPEC SIGABRT under GDB.
+#   * bug_fix   — patches/ applied; verifies the crash no longer occurs.
 
 on:
   push:
@@ -10,16 +12,33 @@ on:
   workflow_dispatch:
 
 jobs:
-  reproduce:
+  build-and-run:
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     # The HEASoft source build is very slow; give it plenty of headroom.
     timeout-minutes: 350
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: reproduce
+            apply_patch: "0"
+            image: heasoft-debug:6.36
+            container: heasoft-bug
+            expect_crash: "true"
+          - name: bug_fix
+            apply_patch: "1"
+            image: heasoft-debug:6.36-patched
+            container: heasoft-fixed
+            expect_crash: "false"
 
     env:
       HEASOFT_VERSION: "6.36"
       TARBALL: heasoft-6.36src.tar.gz
       TARBALL_URL: "https://heasarc.gsfc.nasa.gov/FTP/software/lheasoft/lheasoft6.36/heasoft-6.36src.tar.gz"
-      IMAGE: heasoft-debug:6.36
+      IMAGE: ${{ matrix.image }}
+      CONTAINER: ${{ matrix.container }}
 
     steps:
       - name: Checkout
@@ -51,22 +70,22 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t "${IMAGE}" .
+          docker build --build-arg "APPLY_PATCH=${{ matrix.apply_patch }}" -t "${IMAGE}" .
 
-      - name: Run bug reproduction (capture GDB backtrace)
+      - name: Run scenario (capture GDB backtrace)
         run: |
           set -o pipefail
           # Run without --rm so we can copy the backtrace file out afterwards.
-          docker run --name heasoft-bug "${IMAGE}" | tee run.log
+          docker run --ulimit core=-1 --name "${CONTAINER}" "${IMAGE}" | tee run.log
         # Keep going so we still publish the trace even if XSPEC aborts.
         continue-on-error: true
 
       - name: Extract backtrace from container
         if: always()
         run: |
-          docker cp heasoft-bug:/work/bt_clean.txt ./bt_clean.txt || \
+          docker cp "${CONTAINER}:/work/bt_clean.txt" ./bt_clean.txt || \
             echo "bt_clean.txt not found in container" > bt_clean.txt
-          docker rm -f heasoft-bug || true
+          docker rm -f "${CONTAINER}" || true
 
       - name: Show GDB stack trace
         if: always()
@@ -75,18 +94,45 @@ jobs:
           cat bt_clean.txt || true
           echo "==============================================================="
           {
-            echo "## GDB stack trace";
+            echo "## ${{ matrix.name }}: GDB stack trace";
             echo '```';
             # Key frames first, then make the full trace available as an artifact.
             grep -E "^(#[0-9]|Thread |.*received signal)" bt_clean.txt || true;
             echo '```';
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Verify outcome
+        if: always()
+        run: |
+          if grep -Eq "received signal (SIGABRT|SIGSEGV)" bt_clean.txt; then
+            crashed=true
+          else
+            crashed=false
+          fi
+          echo "Crash detected: ${crashed} (expected crash: ${{ matrix.expect_crash }})"
+
+          if [ "${{ matrix.expect_crash }}" = "true" ]; then
+            if [ "${crashed}" = "true" ]; then
+              echo "OK: the bug reproduced as expected." >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "::warning::Expected a crash but none was detected — the bug may no longer reproduce."
+              echo "WARNING: expected a crash but none was detected." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          else
+            if [ "${crashed}" = "true" ]; then
+              echo "::error::Patched build still crashed — the fix did not hold."
+              echo "FAIL: patched build still crashed." >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            else
+              echo "OK: patched build ran without crashing." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+
       - name: Upload logs and backtrace
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: heasoft-bug-trace
+          name: heasoft-${{ matrix.name }}-trace
           path: |
             bt_clean.txt
             run.log

@@ -3,7 +3,6 @@
 Create minimal OGIP-compliant dummy RMF and ARF files for XSPEC fakeit.
 Run this from the working directory where XSPEC will be launched.
 """
-import sys
 import numpy as np
 from astropy.io import fits
 
@@ -15,7 +14,7 @@ def create_rmf(filename, n=100, emin=0.1, emax=10.0):
     ones_i   = np.ones(n, dtype=np.int16)
     ones_f   = np.ones(n, dtype=np.float32)
 
-    # EBOUNDS: channel number → energy range
+    # EBOUNDS: channel number -> energy range
     ebounds = fits.BinTableHDU.from_columns([
         fits.Column('CHANNEL', 'I',              array=channels),
         fits.Column('E_MIN',   'E', unit='keV',  array=energies[:-1]),
@@ -27,7 +26,7 @@ def create_rmf(filename, n=100, emin=0.1, emax=10.0):
         HDUVERS='1.3.0', CHANTYPE='PI', DETCHANS=n,
     ))
 
-    # MATRIX: photon energy bin → detector channel
+    # MATRIX: photon energy bin -> detector channel
     # N_GRP=1 / F_CHAN=channel / N_CHAN=1 / MATRIX=1.0 per row (diagonal)
     matrix = fits.BinTableHDU.from_columns([
         fits.Column('ENERG_LO', 'E', unit='keV', array=energies[:-1]),
@@ -73,4 +72,3 @@ for i in (1, 2):
     create_arf(f'dummy{i}.arf')
 
 print('All response files ready.')
-sys.exit(0)

@@ -44,7 +44,7 @@ ls -lh /work/ 2>/dev/null || true
 echo ""
 echo "============================================================"
 echo "Step 3: Reproducing bug under GDB"
-echo "  (_GLIBCXX_ASSERTIONS fires abort() → SIGABRT on OOB access)"
+echo "  (_GLIBCXX_ASSERTIONS fires abort() -> SIGABRT on OOB access)"
 echo "============================================================"
 
 gdb -batch \
